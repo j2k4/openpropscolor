@@ -12,17 +12,17 @@
             height: 100%;
             width: 100%;
             overflow: hidden;
-            font-family: Arial, sans-serif;
+            font-family: "Segoe UI", "Helvetica Neue", sans-serif;
         }
 
         .grid-container {
             display: grid;
             grid-template-columns: repeat(19, 1fr);
-            gap: 0;
-            padding: 0;
+            column-gap: 3px;
+            padding: 20px;
             margin: 0;
-            height: 100vh;
-            width: 100vw;
+            height: calc(100vh - 40px);
+            width: calc(100vw - 40px);
             align-items: stretch;
             justify-items: stretch;
         }
@@ -36,24 +36,40 @@
             border: 0;
         }
 
+        .color-cell:nth-child(-n+19) {
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+
+        .color-cell:nth-last-child(-n+19) {
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+
+
         .color-cell:hover {
-            transform: scale(1.05);
+            transform: scale(1.0);
             z-index: 1;
         }
 
-        .color-label {
+        .color-cell .color-label {
             display: none;
             position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: rgba(0, 0, 0, 0.7);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: transparent;
             color: white;
             text-align: center;
-            font-size: 0.75rem;
+            font-size: .8rem;
+            font-weight: bold;
             padding: 0.5rem;
+            text-wrap: nowrap;
             box-sizing: border-box;
+            opacity: 0.6;
         }
+
 
         .color-cell:hover .color-label {
             display: block;
@@ -66,6 +82,17 @@
     <div class="grid-container" id="colorGrid"></div>
 
     <script>
+        // Function to calculate luminance of a color
+        function getLuminance(hex) {
+            hex = hex.replace(/^#/, '');
+
+            const r = parseInt(hex.slice(0, 2), 16) / 255;
+            const g = parseInt(hex.slice(2, 4), 16) / 255;
+            const b = parseInt(hex.slice(4, 6), 16) / 255;
+
+            return (0.299 * r + 0.587 * g + 0.114 * b);
+        }
+
         fetch('https://raw.githubusercontent.com/argyleink/open-props/main/src/props.colors.css')
             .then(response => response.text())
             .then(cssText => {
@@ -81,7 +108,7 @@
                 }
 
                 const order = [
-                    'red', 'pink', 'purple', 'violet', 
+                    'red', 'pink', 'purple', 'violet',
                     'indigo', 'blue', 'cyan', 'teal', 'green', 'lime',
                     'yellow', 'orange', 'choco', 'brown', 'gray', 'stone', 'sand', 'camo', 'jungle'
                 ]
@@ -122,9 +149,14 @@
 
                         const colorLabel = document.createElement('div');
                         colorLabel.className = 'color-label';
-                        colorLabel.textContent = color.name;
-                        colorCell.appendChild(colorLabel);
+                        colorLabel.textContent = color.name.substring(2);
+                        // Calculate the luminance of the background color
+                        const luminance = getLuminance(color.value);
+                        // Set text color based on luminance
+                        colorLabel.style.color = luminance > 0.5 ? 'black' : 'white';
 
+
+                        colorCell.appendChild(colorLabel);
                         colorGrid.appendChild(colorCell);
                     });
                 });
