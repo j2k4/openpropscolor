@@ -17,26 +17,23 @@
 
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(13, 1fr);
-            grid-template-rows: repeat(19, 1fr);
+            grid-template-columns: repeat(19, 1fr);
             gap: 0;
             padding: 0;
             margin: 0;
             height: 100vh;
             width: 100vw;
+            align-items: stretch;
+            justify-items: stretch;
         }
 
         .color-cell {
-            width: 100%;
-            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: transform 0.2s;
             border: 0;
-            /* No border to keep cells tightly together */
-            position: relative;
         }
 
         .color-cell:hover {
@@ -48,7 +45,8 @@
             display: none;
             position: absolute;
             bottom: 0;
-            width: 100%;
+            left: 0;
+            right: 0;
             background-color: rgba(0, 0, 0, 0.7);
             color: white;
             text-align: center;
@@ -65,9 +63,7 @@
 
 <body>
 
-    <div class="grid-container" id="colorGrid">
-        <!-- Colors will be injected here by JavaScript -->
-    </div>
+    <div class="grid-container" id="colorGrid"></div>
 
     <script>
         fetch('https://raw.githubusercontent.com/argyleink/open-props/main/src/props.colors.css')
@@ -76,23 +72,62 @@
                 const colorRegex = /--(.*?)-(\d+):\s*(#.*?);/g;
                 let match;
                 const colorGrid = document.getElementById('colorGrid');
+                const colorArray = [];
 
                 while ((match = colorRegex.exec(cssText))) {
                     const colorName = `--${match[1]}-${match[2]}`;
                     const colorValue = match[3];
-                    const colorCell = document.createElement('div');
-                    colorCell.className = 'color-cell';
-                    colorCell.style.backgroundColor = colorValue;
-                    colorCell.title = `${colorName}: ${colorValue}`;
-                    colorCell.addEventListener('click', () => navigator.clipboard.writeText(colorName));
-
-                    const colorLabel = document.createElement('div');
-                    colorLabel.className = 'color-label';
-                    colorLabel.textContent = colorName;
-                    colorCell.appendChild(colorLabel);
-
-                    colorGrid.appendChild(colorCell);
+                    colorArray.push({ name: colorName, value: colorValue });
                 }
+
+                const order = [
+                    'red', 'pink', 'purple', 'violet', 
+                    'indigo', 'blue', 'cyan', 'teal', 'green', 'lime',
+                    'yellow', 'orange', 'choco', 'brown', 'gray', 'stone', 'sand', 'camo', 'jungle'
+                ]
+
+                colorArray.sort((a, b) => {
+                    let groupA = order.indexOf(a.name.split('-')[2]);
+                    let groupB = order.indexOf(b.name.split('-')[2]);
+
+                    if (groupA !== groupB) {
+                        // If the groups are different, sort by group order
+                        return groupA - groupB;
+                    } else {
+                        // If the groups are the same, reverse the order for darker shades
+                        return parseInt(b.name.split('-')[3]) - parseInt(a.name.split('-')[3]);
+                    }
+                });
+
+                // Calculate the number of colors in each 'column'
+                const colorsPerColumn = colorArray.length / order.length;
+
+                // Create a 2D array to hold columns of colors
+                const columns = Array.from({ length: colorsPerColumn }, () => []);
+
+                // Populate each 'column' with the corresponding colors
+                colorArray.forEach((color, index) => {
+                    const columnIndex = index % colorsPerColumn;
+                    columns[columnIndex].push(color);
+                });
+
+                // Now, create the grid with the colors in a column-first order
+                columns.forEach(column => {
+                    column.forEach(color => {
+                        const colorCell = document.createElement('div');
+                        colorCell.className = 'color-cell';
+                        colorCell.style.backgroundColor = color.value;
+                        colorCell.title = `${color.name}: ${color.value}`;
+                        colorCell.addEventListener('click', () => navigator.clipboard.writeText(color.name));
+
+                        const colorLabel = document.createElement('div');
+                        colorLabel.className = 'color-label';
+                        colorLabel.textContent = color.name;
+                        colorCell.appendChild(colorLabel);
+
+                        colorGrid.appendChild(colorCell);
+                    });
+                });
             });
     </script>
 
