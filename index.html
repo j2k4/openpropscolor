@@ -12,7 +12,8 @@
             height: 100%;
             width: 100%;
             overflow: hidden;
-            font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+            font-family: DM Sans, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            font-size: 1rem;
         }
 
         .grid-container {
@@ -21,7 +22,7 @@
             column-gap: 3px;
             padding: 20px;
             margin: 0;
-            height: calc(100vh - 40px);
+            height: calc(100vh - 80px);
             width: calc(100vw - 40px);
             align-items: stretch;
             justify-items: stretch;
@@ -45,8 +46,6 @@
             border-bottom-left-radius: 10px;
             border-bottom-right-radius: 10px;
         }
-
-
 
         .color-cell:hover {
             transform: scale(1.0);
@@ -74,12 +73,76 @@
         .color-cell:hover .color-label {
             display: block;
         }
+
+        .footer {
+            display: flex;
+            justify-content: space-evenly;
+            background-color: #fff;
+            padding: 10px 20px;
+            margin: 0;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        .footer select {
+            padding: 5px;
+        }
+
+        .footer-left {
+            flex: 1;
+        }
+
+        .footer-message {
+            flex: 2;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            animation: fadeOut 3s ease-in-out forwards;
+            font-size: 1.3rem;
+            color: gray;
+        }
+
+        .footer-right {
+            flex: 1;
+            margin-right: 30px;
+            text-align: right;
+        }
+
+        .footer .credit-link {
+            color: #000;
+            text-decoration: none;
+        }
+
+        .footer .credit-link:hover {
+            color: #000;
+            text-decoration: underline;
+        }
     </style>
 </head>
 
 <body>
 
     <div class="grid-container" id="colorGrid"></div>
+
+    <div class="footer">
+        <div class="footer-left">
+            <select>
+                <option value="open-props">Open Props Class</option>
+                <option value="hex">HEX</option>
+                <option value="rgb">RGB</option>
+                <option value="hcl">HCL</option>
+            </select>
+        </div>
+        <div class="footer-message" id="message">
+        </div>
+        <div class="footer-right">
+            <a href="https://bluelight.dev" class="credit-link">Bluelight</a> ⭐️    
+        </div>
+    </div>
+
+
 
     <script>
         // Function to calculate luminance of a color
@@ -91,6 +154,36 @@
             const b = parseInt(hex.slice(4, 6), 16) / 255;
 
             return (0.299 * r + 0.587 * g + 0.114 * b);
+        }
+
+        // Get the dropdown element
+        const selectDropdown = document.querySelector('select');
+        const footerMessage = document.querySelector('.footer-message');
+
+        // Function to copy the appropriate value to the clipboard
+        function copyValueToClipboard(color, selectedOption) {
+            let valueToCopy = '';
+
+            switch (selectedOption) {
+                case 'hex':
+                    valueToCopy = color.value;
+                    break;
+                case 'rgb':
+                    valueToCopy = convertToRGB(color.value);
+                    break;
+                case 'hcl':
+                    valueToCopy = convertToHCL(color.value);
+                    break;
+                case 'open-props':
+                    valueToCopy = color.name;
+                    break;
+                default:
+                    // Default to copying the color name
+                    valueToCopy = color.name;
+                    break;
+            }
+
+            navigator.clipboard.writeText(valueToCopy);
         }
 
         fetch('https://raw.githubusercontent.com/argyleink/open-props/main/src/props.colors.css')
@@ -145,7 +238,13 @@
                         colorCell.className = 'color-cell';
                         colorCell.style.backgroundColor = color.value;
                         colorCell.title = `${color.name}: ${color.value}`;
-                        colorCell.addEventListener('click', () => navigator.clipboard.writeText(color.name));
+                        colorCell.addEventListener('click', () => {
+                            // Get the selected option from the dropdown
+                            const selectedOption = selectDropdown.value;
+                            // Copy the appropriate value to the clipboard
+                            copyValueToClipboard(color, selectedOption);
+                            displayRandomMessage();
+                        });
 
                         const colorLabel = document.createElement('div');
                         colorLabel.className = 'color-label';
@@ -160,7 +259,102 @@
                         colorGrid.appendChild(colorCell);
                     });
                 });
+
+                // Reset the text content and opacity after the fade out
+                setTimeout(() => {
+                    footerMessage.textContent = "🎨 Click-to-Copy Open Props Color Palette";
+                    footerMessage.style.opacity = 1;
+                }, 3500);
             });
+
+        // Function to convert HEX to RGB
+        function convertToRGB(hex) {
+            // Remove the '#' symbol if it exists
+            hex = hex.replace(/^#/, '');
+
+            // Parse the hex values to integers
+            const r = parseInt(hex.slice(0, 2), 16);
+            const g = parseInt(hex.slice(2, 4), 16);
+            const b = parseInt(hex.slice(4, 6), 16);
+
+            // Return the RGB format as a string
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        // Function to convert HEX to HCL (Hue, Chroma, Lightness)
+        function convertToHCL(hex) {
+            // First, convert HEX to RGB
+            const rgb = convertToRGB(hex);
+
+            // Split the RGB values
+            const rgbValues = rgb.match(/\d+/g).map(Number);
+            const r = rgbValues[0] / 255;
+            const g = rgbValues[1] / 255;
+            const b = rgbValues[2] / 255;
+
+            // Calculate the maximum and minimum values
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+
+            // Calculate the lightness
+            const lightness = (max + min) / 2;
+
+            // Calculate the chroma
+            let chroma = 0;
+            if (max !== min) {
+                const delta = max - min;
+                chroma = delta / (1 - Math.abs(2 * lightness - 1));
+            }
+
+            // Calculate the hue
+            let hue = 0;
+            if (chroma > 0) {
+                if (max === r) {
+                    hue = 60 * (((g - b) / (max - min)) % 6);
+                } else if (max === g) {
+                    hue = 60 * (((b - r) / (max - min)) + 2);
+                } else {
+                    hue = 60 * (((r - g) / (max - min)) + 4);
+                }
+            }
+
+            // Ensure the hue is positive
+            if (hue < 0) {
+                hue += 360;
+            }
+
+            // Return the HCL format as a string
+            return `hcl(${Math.round(hue)}, ${Math.round(chroma * 100)}%, ${Math.round(lightness * 100)}%)`;
+        }
+
+
+        // Array of encouraging messages
+        const encouragingMessages = [
+            "🚀 Blast off into creativity!",
+            "🌟 Shine like a star!",
+            "🌈 Taste the rainbow of colors!",
+            "🌞 Embrace the sunshine of creativity!",
+            "🌠 You're a color magician!",
+            "🎨 Paint the world with your choices!",
+            "💡 Illuminate your design with these colors!",
+            "🪄 Create magic with your clicks!",
+            "🌟 Sparkle and dazzle!",
+            "🌌 Explore the color universe!"
+        ];
+
+        // Function to display a random encouraging message
+        function displayRandomMessage() {
+            const messageArea = document.getElementById('message');
+            const randomIndex = Math.floor(Math.random() * encouragingMessages.length);
+            const randomMessage = encouragingMessages[randomIndex];
+
+            messageArea.textContent = randomMessage;
+            messageArea.style.opacity = 1;
+
+            setTimeout(() => {
+                messageArea.style.opacity = 0;
+            }, 3000);
+        }
     </script>
 
 </body>
