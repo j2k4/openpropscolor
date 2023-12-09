@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="reset.css">
+    <title>Color Picker</title>
+    <style>
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(13, 1fr);
+            /* 13 columns for each color collection */
+            grid-auto-rows: minmax(min-content, max-content);
+            /* Auto-adjust rows to content size */
+            gap: 10px;
+            padding: 10px;
+            box-sizing: border-box;
+            width: 100%;
+            /* Use 100% instead of 100vw to avoid horizontal scrollbar due to padding */
+            height: 100vh;
+            /* Full height of the viewport */
+            overflow: auto;
+            /* Scroll if content overflows */
+            align-content: start;
+        }
+
+        .color-collection {
+            display: contents;
+            /* Treat children of color-collection as if they are direct children of the grid container */
+        }
+
+        .color-cell {
+            background: var(--color);
+            /* Use CSS variable for background */
+            width: 100%;
+            /* Full width of the column */
+            padding-top: 8%;
+            /* Padding top is used to create aspect ratio */
+            position: relative;
+            /* Needed for absolute positioning inside the cell */
+            box-sizing: border-box;
+        }
+
+        /* Additional styling for the color label inside the cell if needed */
+        .color-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            padding: 5px;
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.7);
+            /* Semi-transparent label background */
+        }
+
+
+
+
+        select {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <label for="formatSelect">Copy:</label>
+    <select id="formatSelect">
+        <option value="hex">HEX</option>
+        <option value="rgb">RGB</option>
+        <option value="hcl">HCL</option>
+        <option value="classname">Openprops Class</option>
+    </select>
+    <div class="grid-container" id="colorGrid">
+        <!-- Colors will be inserted here -->
+    </div>
+
+    <script>
+        // Inline JavaScript for fetching and parsing the CSS file
+        async function fetchColors() {
+            const response = await fetch('https://raw.githubusercontent.com/argyleink/open-props/main/src/props.colors.css');
+            const cssText = await response.text();
+            return cssText.match(/--\w+-\d+: #[0-9a-fA-F]{6}/g);
+        }
+
+        function convertToRGB(hex) {
+            // Remove the hash at the start if it's there
+            hex = hex.replace(/^#/, '');
+
+            // Parse the hex color
+            let r = parseInt(hex.substring(0, 2), 16);
+            let g = parseInt(hex.substring(2, 4), 16);
+            let b = parseInt(hex.substring(4, 6), 16);
+
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        function convertToHCL(hex) {
+            // Convert HEX to HCL
+        }
+
+        async function init() {
+            const colors = await fetchColors();
+            const colorGrid = document.getElementById('colorGrid');
+            const formatSelect = document.getElementById('formatSelect');
+
+            // Assuming 'colors' is an array of all color names ordered correctly
+            let colorCollection = document.createElement('div');
+            colorCollection.className = 'color-collection';
+            colors.forEach((color, index) => {
+                if (index > 0 && index % 13 === 0) {
+                    // Once we've added 13 colors, append the collection and start a new one
+                    colorGrid.appendChild(colorCollection);
+                    colorCollection = document.createElement('div');
+                    colorCollection.className = 'color-collection';
+                }
+
+                const [name, hex] = color.split(': ');
+                const cell = document.createElement('div');
+                cell.className = 'color-cell';
+                cell.style.backgroundColor = hex;
+                cell.title = name;
+                cell.onclick = function () {
+                    // Copy functionality as previously defined
+                };
+                colorCollection.appendChild(cell);
+            });
+
+            // Append the last collection if it has colors in it
+            if (colorCollection.children.length > 0) {
+                colorGrid.appendChild(colorCollection);
+            }
+        }
+
+
+        init();
+    </script>
+</body>
+
+</html>
