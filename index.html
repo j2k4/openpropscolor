@@ -121,11 +121,16 @@
         }
     </style>
 </head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-W4PT7MC7TV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
+  gtag('config', 'G-W4PT7MC7TV');
+</script>
 <body>
-
     <div class="grid-container" id="colorGrid"></div>
-
     <div class="footer">
         <div class="footer-left">
             <select>
@@ -142,9 +147,7 @@
             💡 <a href="https://tailwindcolor.com/" class="credit-link" title="inspired by">tailwindcolor.com</a>
         </div>
     </div>
-
     <script>
-        // Function to calculate luminance of a color
         function getLuminance(hex) {
             hex = hex.replace(/^#/, '');
 
@@ -155,11 +158,9 @@
             return (0.299 * r + 0.587 * g + 0.114 * b);
         }
 
-        // Get the dropdown element
         const selectDropdown = document.querySelector('select');
         const footerMessage = document.querySelector('.footer-message');
 
-        // Function to copy the appropriate value to the clipboard
         function copyValueToClipboard(color, selectedOption) {
             let valueToCopy = '';
 
@@ -218,9 +219,7 @@
                     }
                 });
 
-                // Calculate the number of colors in each 'column'
                 const colorsPerColumn = colorArray.length / order.length;
-
                 // Create a 2D array to hold columns of colors
                 const columns = Array.from({ length: colorsPerColumn }, () => []);
 
@@ -238,9 +237,7 @@
                         colorCell.style.backgroundColor = color.value;
                         colorCell.title = `${color.name}: ${color.value}`;
                         colorCell.addEventListener('click', () => {
-                            // Get the selected option from the dropdown
                             const selectedOption = selectDropdown.value;
-                            // Copy the appropriate value to the clipboard
                             copyValueToClipboard(color, selectedOption);
                             displayRandomMessage();
                         });
@@ -248,11 +245,9 @@
                         const colorLabel = document.createElement('div');
                         colorLabel.className = 'color-label';
                         colorLabel.textContent = color.name.substring(2);
-                        // Calculate the luminance of the background color
+                        // set the color of the label text based on the luminance of the cell color
                         const luminance = getLuminance(color.value);
-                        // Set text color based on luminance
                         colorLabel.style.color = luminance > 0.5 ? 'black' : 'white';
-
 
                         colorCell.appendChild(colorLabel);
                         colorGrid.appendChild(colorCell);
@@ -263,10 +258,9 @@
                 setTimeout(() => {
                     footerMessage.textContent = "🎨 Click-to-Copy Open Props CSS Classname";
                     footerMessage.style.opacity = 1;
-                }, 3500);
+                }, 1000);
             });
 
-        // Function to convert HEX to RGB
         function convertToRGB(hex) {
             // Remove the '#' symbol if it exists
             hex = hex.replace(/^#/, '');
@@ -326,8 +320,6 @@
             return `hcl(${Math.round(hue)}, ${Math.round(chroma * 100)}%, ${Math.round(lightness * 100)}%)`;
         }
 
-
-        // Array of encouraging messages
         const encouragingMessages = [
             "🚀 Blast off into creativity!",
             "🌟 Shine like a star!",
@@ -341,7 +333,6 @@
             "🌌 Explore the color universe!"
         ];
 
-        // Function to display a random encouraging message
         function displayRandomMessage() {
             const messageArea = document.getElementById('message');
             const randomIndex = Math.floor(Math.random() * encouragingMessages.length);
